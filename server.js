@@ -12,7 +12,7 @@ const { response } = require("express");
 
 // SETUP
 //const HTTP_PORT = process.env.PORT || 8080;
-const HTTP_PORT = process.env.PORT || 8080;
+const HTTP_PORT = process.env.PORT || 8000;
 
 app.use(bodyParser.urlencoded({ 
     extended: true
@@ -167,6 +167,15 @@ app.get("/employees/delete/:empNum", (req, res) => {
     })
 })
 
+app.get("/employees/add", (req,res)=>{
+    db.getDepartments().then((data) => {
+        res.render("addEmployee", {departments: data, user: req.session.user});
+    }).catch(() => {
+        res.render("addEmployee", {departments: [], user: req.session.user});
+    }) 
+}); 
+
+
 app.get("/employee/:empNum", (req, res) => {
     // initialize an empty object to store the values
     let viewData = {};
@@ -222,6 +231,7 @@ app.get("/departments", (req, res) => {
     db.getDepartments()
     .then((data) => {
         if (data.length > 0) {
+            console.log(data);
             res.render("departments", {departments: data, user: req.session.user});
         } else {
             res.render("departments", {message: "no results", user: req.session.user})
@@ -342,9 +352,27 @@ app.post("/sysadm/search", (req, res) => {
     }
 });
 
+app.get("/reportanalysis", (req, res) => {
+    let qry = "SELECT SUM(F.PoundsTY ) AS ThisYear, SUM(F.PoundsLY ) AS LastYear, SUM(F.PoundsTY - F.PoundsLY) AS Change, O.Martket  FROM [dbo].[FACTS_TRANSACTIONS] F "
+    + " INNER JOIN [dbo].[DIM_CUSTOMER] C ON F.CustomerKey = C.CustomerKey " 
+    + " INNER JOIN [dbo].[DIM_OPCO] O ON O.OpcoKey = C.OpcoKey "
+    + " GROUP BY O.Martket "
+    db.getDataByQuery(qry).then((data) =>{
+        // console.log(JSON.stringify(data));
+        if (data.length > 0) {
+            res.render("market", {markets: data, user: req.session.user});
+        } else {
+            res.render("market", {message: "no results", user: req.session.user})
+    }}).catch(() => {
+        res.render("market", {message: "Encountered error"});
+    })
+});
+
+
+
 // INITIALIZE
 db.initialize().then(() => {
-    app.listen(HTTP_PORT, ()=>{
+    app.listen(HTTP_PORT,"127.0.0.1", ()=>{
         console.log("listening on: " + HTTP_PORT);
     });
 }).catch((err) => {
@@ -355,5 +383,27 @@ db.initialize().then(() => {
 app.use((req, res) => {
     res.status(404).send("Page Does Not Exist");
 });
+
+// app.get("/reportanalysis", (req, res) => {
+//     let qry = "SELECT SUM(F.PoundsTY ), SUM(F.PoundsLY ), SUM(F.PoundsTY - F.PoundsLY), O.Martket  FROM [dbo].[FACTS_TRANSACTIONS] F "
+//     + " INNER JOIN [dbo].[DIM_CUSTOMER] C ON F.CustomerKey = C.CustomerKey " 
+//     + " INNER JOIN [dbo].[DIM_OPCO] O ON O.OpcoKey = C.OpcoKey "
+//     + " GROUP BY O.Martket"
+//     db.getDataByQuery(qry)
+//     .then((data) => {
+//         if (data) {
+//             console.log(data)
+//              res.render("updateDepartment", {department: data, user: req.session.user});
+//         } else {
+//             res.status(404).send("Not data Found");
+//         }
+//     }).catch(() => {
+//         console.log("get error for this query")
+//         // res.render("updateDepartment", {message: "Encountered Error", user: req.session.user});
+//     })
+// });
+
+
+
 
 module.exports = app;

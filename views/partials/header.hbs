@@ -1,12 +1,12 @@
 <nav class="navbar navbar-light bg-light">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/">NorthStar HR Management</a>
+        <a class="navbar-brand" href="/">湖南数据分析中心</a>
         <span class="navbar-text">
             {{#if username}}
-            Logged in: {{username}}&nbsp;
-            <a href="/logout"><button type="button" class="btn btn-secondary btn-sm">Log Out</button></a>
+                Logged in: {{username}}&nbsp;
+                <a href="/logout"><button type="button" class="btn btn-secondary btn-sm">Log Out</button></a>
             {{else}}
-            Not logged In
+                <p>Welcome. Please <a href="/login">log in</a>.</p>
             {{/if}}
         </span>
     </div>

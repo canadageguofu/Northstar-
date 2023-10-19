@@ -1,19 +1,81 @@
 const Sequelize = require("sequelize");
 const hash = require("object-hash");
-const { response } = require("express");
+const { response } = require("express"); 
+const sql = require('mssql');
+const sqlConfig = {
+    user: 'sa',
+    password: 'sa',
+    database: 'Category_Reports',
+    server: 'localhost',
+    pool: {
+      max: 10,
+      min: 0,
+      idleTimeoutMillis: 30000
+    },
+    options: {
+      encrypt: true, // for azure
+      trustServerCertificate: true // change to true for local dev / self-signed certs
+    }
+  }
 
-var sequelize = new Sequelize(
-    'd2ld2ku09851kr', 
-    'oeizxsqetprcmc', 
-    '5ef39859c1bbb57bd9eb781daf186d5d3bffb5f01576f2032106aa8ee2c47a72', 
-    {
-        host: 'ec2-54-167-168-52.compute-1.amazonaws.com',
-        dialect: 'postgres',
-        port: 5432,
-        dialectOptions: {
-            ssl: {rejectUnauthorized: false}
+var mysql = require('mysql');
+
+var con = mysql.createConnection({
+  host: "8.217.176.252:3306",
+  user: "root",
+  password: "V2jUQTjVAyMhPIg",
+  database: "Category_Reports"
+});
+
+
+// var sequelize = new Sequelize(
+//     'd2ld2ku09851kr', 
+//     'oeizxsqetprcmc', 
+//     '5ef39859c1bbb57bd9eb781daf186d5d3bffb5f01576f2032106aa8ee2c47a72', 
+//     {
+//         host: 'ec2-54-167-168-52.compute-1.amazonaws.com',
+//         dialect: 'postgres',
+//         port: 5432,
+//         dialectOptions: {
+//             ssl: {rejectUnauthorized: false}
+//     }
+// });
+
+// var sequelize = new Sequelize('postgres', 'postgres', '!Fsunny23', {
+//     //    host: 'ec2-3-210-23-22.compute-1.amazonaws.com',
+//         host: '127.0.0.1',
+//         dialect: 'postgres',
+//         port: 5432,
+//         // dialectOptions: {
+//         //     ssl: { rejectUnauthorized: false }
+//         // }
+//     });
+    
+
+// Initialize Sequelize to connect to sample DB
+var sequelize = new Sequelize('Category_Main', 'sa', 'sa', {
+    dialect: 'mssql',
+    host: 'localhost',
+    port: 1433, // Default port
+    logging: false, // disable logging; default: console.log
+
+    dialectOptions: {
+        requestTimeout: 30000 // timeout = 30 seconds
     }
 });
+
+
+var sequelize = new Sequelize('Category_Main', 'root', 'V2jUQTjVAyMhPIg', {
+    dialect: 'mysql',
+    host: '8.217.176.252',
+    port: 3306, // Default port
+    logging: false, // disable logging; default: console.log
+
+    dialectOptions: {
+        requestTimeout: 30000 // timeout = 30 seconds
+    }
+});
+
 
 var Employee = sequelize.define('Employee', {
     employeeNum: {
@@ -442,7 +504,7 @@ var SystemLog = sequelize.define('SystemLog', {
 });
 
 module.exports.addLog = function(logData) {
-    console.log(logData);
+    // console.log(logData);
     return new Promise((resolve, reject) => {
         for (let prop in logData) {
             if (logData[prop] == '') {
@@ -457,5 +519,62 @@ module.exports.addLog = function(logData) {
         });
         }
     );
+}
+
+
+module.exports.getDataByQuery = function(qry) {
+    // console.log(qry);
+    return new Promise((resolve, reject) => {
+        // sequelize.query("select 1 as dddddd", {
+        //     type: sequelize.SELECT
+        //   }).then((data)=>{
+        //     data = data.map(value => value.dataValues);
+        //     console.log(JSON.stringify(data[0], null, 2));
+        //     resolve(data)
+        //   }).catch((err) => {
+        //     console.log(err);
+        //     reject("no result returned");
+        //   });
+
+        // sql.connect(sqlConfig).then(()=>{
+        //     sql.query(qry).then((result)=>{
+        //         console.log(result);
+        //         resolve(result);
+        //     }).catch((err)=>{
+        //         console.log(err);
+        //         reject("no result returned");
+        //     })
+        // })
+
+        let nameList = "";
+        let errorString = "";
+        // Create connection
+        // sql.connect(sqlConfig, function (err) {
+
+        sql.connect(sqlConfig).then(()=>{
+          // Create Request object
+          let sqlRequest = new sql.Request();
+      
+          // QueryString
+        //   let queryString = `select * from NAME`;
+          // Run the query
+          sqlRequest.query(qry).then((data)=>{
+            // data.recordset.forEach((el) => {
+            //     nameList += '<li>${el.name}</li>';
+            //   });
+            //   resolve(nameList);
+            // console.log(data.recordset);
+            // data = data.recordset.map(value => value.dataValues);
+            data = data.recordset;
+            resolve(data);
+        }).catch((err)=>{
+                console.log(err);
+                reject("get list error");
+           })
+        }).catch((err)=>{
+            console.log(err);
+            reject("connect error");
+        });    
+   });
 }
 
