@@ -11,6 +11,7 @@ const { response } = require("express");
 
 
 // SETUP
+//const HTTP_PORT = process.env.PORT || 8080;
 const HTTP_PORT = process.env.PORT || 8080;
 
 app.use(bodyParser.urlencoded({ 
@@ -56,12 +57,15 @@ app.get("/", (req, res) => {
 })
 
 app.get("/login", (req, res) => {
-    res.render("login", {user: req.session.user, layout: false})
+     res.render("login", {user: req.session.user, layout: false});
+
+    // res.render("dashboard", {user: req.session.user, layout: false})
 })
 
 app.post("/login", (req, res) => {
     const username = req.body.username;
     const pwd = req.body.pwd;
+    console.log(hash(req.body.pwd));
     if (username === "" && pwd === "") {
         return res.render("login", {errorMsg: "Username and Password are required!", user: req.session.user, layout: false});
     } else if (username !== "" && pwd === "") {
