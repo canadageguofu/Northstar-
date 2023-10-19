@@ -385,6 +385,7 @@ module.exports.updateDepartment = function(departmentData) {
                 }
             })
         }
+        
     );
 }
 
